@@ -1,13 +1,13 @@
 {
     "name": "随机点名",
     "description": "为Class Widgets 带上随机点名功能",
-    "version": "1.0.0",
-    "plugin_ver": 1,
+    "version": "1.1",
+    "plugin_ver": 2,
     "author": "neko_lfj | RinLit",
     "settings": true,
 
-    "url": "请直接填写GitHub仓库地址，无需加速源",
+    "url": "https://github.com/nekolfj/cw-range-name-plugin",
     "branch": "main",
 
-    "update_date": "2024/2/3"
+    "update_date": "2024/2/4"
 }
