@@ -2,6 +2,12 @@ import os
 import random
 import subprocess
 import platform
+
+from qfluentwidgets import PrimaryPushButton, PushButton, DisplayLabel
+from qframelesswindow import FramelessDialog, FramelessWindow
+
+from .ClassWidgets.base import PluginBase, SettingsBase
+from PyQt5 import uic
 from PyQt5.QtCore import Qt, QPoint, pyqtSignal
 from PyQt5.QtGui import QFont, QMouseEvent
 from PyQt5.QtWidgets import (
@@ -10,11 +16,7 @@ from PyQt5.QtWidgets import (
     QLabel,
     QDialog,
     QVBoxLayout,
-    QPushButton,
-    QDesktopWidget,
-    QMainWindow,
-    QToolButton,
-    QFrame,
+    QDesktopWidget
 )
 
 
@@ -142,15 +144,15 @@ class NameDialog(QDialog):
     def init_ui(self, name):
         """初始化结果显示对话框"""
         self.setWindowTitle("随机点名结果")
-        self.setFixedSize(600, 400)
-        self.setStyleSheet("background-color: white;")
-
+        self.resize(600, 400)
         layout = QVBoxLayout(self)
-        self.name_label = QLabel(name)
+        layout.setContentsMargins(32, 0, 0, 0)
+        self.name_label = DisplayLabel(name)
         self.name_label.setAlignment(Qt.AlignCenter)
         self.name_label.setFont(QFont("黑体", 150))
 
-        self.confirm_btn = QPushButton("确定")
+        self.confirm_btn = PushButton()
+        self.confirm_btn.setText("确定")
         self.confirm_btn.setFixedSize(100, 40)
         self.confirm_btn.clicked.connect(self.close)
 
@@ -168,39 +170,9 @@ class NameDialog(QDialog):
         self.move(x, y)
 
 
-class SettingsWindow(QMainWindow):
-    def __init__(self, plugin_path):
-        super().__init__()
-        self.plugin_path = plugin_path
-        self.init_ui()
-
-    def init_ui(self):
-        """初始化设置窗口"""
-        self.setWindowTitle("随机点名设置")
-        self.setFixedSize(400, 300)
-
-        central_widget = QFrame()
-        self.setCentralWidget(central_widget)
-
-        layout = QVBoxLayout(central_widget)
-        self.open_btn = QToolButton()
-        self.open_btn.setText("打开名单文件")
-        self.open_btn.clicked.connect(self.open_names_file)
-        layout.addWidget(self.open_btn, alignment=Qt.AlignCenter)
-
-    def open_names_file(self):
-        """打开名单文件进行编辑"""
-        file_path = os.path.join(self.plugin_path, "names.txt")
-        if platform.system() == "Windows":
-            os.startfile(file_path)
-        elif platform.system() == "Linux":
-            subprocess.call(["xdg-open", file_path])
-        elif platform.system() == "Darwin":
-            subprocess.call(["open", file_path])
-
-
-class Plugin:
+class Plugin(PluginBase):
     def __init__(self, cw_contexts, method):
+        super().__init__(cw_contexts, method)
         self.floating_window = None
 
     def execute(self):
@@ -210,13 +182,22 @@ class Plugin:
         self.floating_window.show()
 
 
-class Settings:
+class Settings(SettingsBase):
     def __init__(self, plugin_path, parent=None):
-        self.window = SettingsWindow(plugin_path)
+        super().__init__(plugin_path, parent)
+        uic.loadUi(os.path.join(self.PATH, "settings.ui"), self)
+        open_names_list = self.findChild(PrimaryPushButton, "open_names_list")
+        open_names_list.clicked.connect(self.open_names_file)
 
-    def show(self):
-        """显示设置窗口"""
-        self.window.show()
+    def open_names_file(self):
+        """打开名单文件进行编辑"""
+        file_path = os.path.join(self.PATH, "names.txt")
+        if platform.system() == "Windows":
+            os.startfile(file_path)
+        elif platform.system() == "Linux":
+            subprocess.call(["xdg-open", file_path])
+        elif platform.system() == "Darwin":
+            subprocess.call(["open", file_path])
 
 
 if __name__ == "__main__":
