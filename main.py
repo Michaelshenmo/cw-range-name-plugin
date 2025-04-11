@@ -2,6 +2,7 @@ import os
 import random
 import subprocess
 import platform
+import winreg
 
 from qfluentwidgets import PrimaryPushButton, PushButton, DisplayLabel
 from qframelesswindow import FramelessDialog, FramelessWindow
@@ -140,9 +141,10 @@ class NameDialog(QDialog):
         super().__init__(parent)
         self.init_ui(name)
         self.move_center()
+        self.apply_theme_style()
 
     def init_ui(self, name):
-        """初始化结果显示对话框"""
+        # 在 NameDialog 的 __init__ 方法中添加：
         self.setWindowTitle("随机点名结果")
         self.resize(600, 400)
         layout = QVBoxLayout(self)
@@ -158,6 +160,54 @@ class NameDialog(QDialog):
 
         layout.addWidget(self.name_label)
         layout.addWidget(self.confirm_btn, alignment=Qt.AlignCenter)
+        
+    def apply_theme_style(self):
+        """Windows专用主题检测"""
+        try:
+            # 访问Windows注册表获取主题信息
+            with winreg.OpenKey(
+                winreg.HKEY_CURRENT_USER,
+                r"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
+            ) as key:
+                # 读取AppsUseLightTheme的值（1=浅色，0=深色）
+                theme_value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
+                is_light_theme = theme_value == 1
+        except Exception as e:
+            print(f"主题检测失败，使用默认浅色: {str(e)}")
+            is_light_theme = True
+
+        # 设置对应主题样式
+        if is_light_theme:
+            self.setStyleSheet("""
+                QDialog {
+                    background-color: #FFFFFF;
+                }
+                DisplayLabel {
+                    color: #000000 !important;
+                }
+                QPushButton {
+                    background-color: #F0F0F0;
+                    color: #000000;
+                    border: 1px solid #CCCCCC;
+                    border-radius: 4px;
+                }
+            """)
+        else:
+            self.setStyleSheet("""
+                QDialog {
+                    background-color: #2B2B2B;
+                }
+                DisplayLabel {
+                    color: #FFFFFF !important;
+                }
+                QPushButton {
+                    background-color: #404040;
+                    color: #FFFFFF;
+                    border: 1px solid #505050;
+                    border-radius: 4px;
+                }
+            """)
+
 
     def update_content(self, new_name):
         self.name_label.setText(new_name)
